@@ -5,7 +5,7 @@ ENV APP_HOME=/opt/app
 WORKDIR ${APP_HOME}
 
 # Copy the JAR file
-COPY paymentapi.jar ${APP_HOME}/paymentapi.jar
+COPY target/paymentapi.jar ${APP_HOME}/paymentapi.jar
 
 # Set the entrypoint to run Java
 ENTRYPOINT ["java", "-jar"]
