@@ -19,7 +19,7 @@ spec:
         app: paymentapi-deploy
     spec:
       containers:
-      - image: docker.io/kawshikroycse/paymentapi:22
+      - image: docker.io/kawshikroycse/paymentapi:23
         name: paymentapi
 
 
