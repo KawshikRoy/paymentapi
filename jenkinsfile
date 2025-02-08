@@ -1,0 +1,68 @@
+pipeline {
+    agent any
+      environment {
+        IMAGE_TAG = "kawshikroycse/paymentapi:${BUILD_NUMBER}"
+    }
+	tools {
+        maven 'Maven-3.9.9'
+        jdk 'JAVA-23'
+    }
+    stages {
+        stage('Pull Source Code From GITHUB') {
+            steps {
+              echo 'Start Pulling'
+              git branch: 'main', credentialsId: 'GITHUB', url: 'https://github.com/KawshikRoy/paymentapi.git'
+            }
+        }
+		
+		stage('Maven Build and Install') {
+            steps {
+              echo 'building Java Project'
+              sh 'mvn clean install'
+            }
+        }
+		
+		stage('build Docker Image') {
+            steps {
+              echo 'building Java Project'
+              sh """
+					docker build -t ${IMAGE_TAG} .
+			     """
+            }
+        }
+        
+        stage('Push Image to Docker Hub') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'docker-hub', passwordVariable: 'DOCKER_HUB_PASSWORD', usernameVariable: 'DOCKER_HUB_USER')]) {
+                    sh """
+                        docker login -u $DOCKER_HUB_USER -p$DOCKER_HUB_PASSWORD
+                        docker push ${IMAGE_TAG}
+                    """
+                }
+            }
+        }
+        
+        stage('Update Kubernetes Deployment File') {
+            steps {
+                sh """
+                    sed -i "s#kawshikroycse/paymentapi:.*#kawshikroycse/paymentapi:${BUILD_NUMBER}#" DeploymentService.yaml
+                    cat DeploymentService.yaml
+                """
+            }
+        }
+        
+        stage('Commit and Push Updated Manifest') {
+            steps {
+                withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
+                    sh """
+                        git config --global user.email "kawshik_aiub@outlook.com"
+                        git config --global user.name "Jenkins"
+                        git add .
+                        git commit -m "Update Kubernetes manifest with new image tag ${IMAGE_TAG}"
+                        git push https://github-username:${GITHUB_TOKEN}@github.com/KawshikRoy/paymentapi.git main
+                    """
+                }
+            }
+        }
+    }
+}
