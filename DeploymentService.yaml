@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: paymentapi-deploy
+  name: paymentapi-deploy
+  namespace: development
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: paymentapi-deploy
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: paymentapi-deploy
+    spec:
+      containers:
+      - image: docker.io/kawshikroycse/paymentapi:15
+        name: paymentapi
+
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-nodeport-service
+  namespace: development
+spec:
+  type: NodePort
+  selector:
+    run: paymentapi-deploy
+  ports:
+  - port: 8081
+    protocol: TCP
+    targetPort: 8081
+    nodePort: 30555
+
